@@ -8,7 +8,7 @@ Speech data processing pipeline. This repository is under active development and
 
 ## Commands
 
-> TODO: Add lint, test, and build commands once the project structure and language are decided.
+> TODO: Add lint and build commands once the project structure and language are decided.
 
 ## Conventions
 
@@ -20,5 +20,6 @@ Speech data processing pipeline. This repository is under active development and
 ## Guidelines for Agents
 
 - Before making structural decisions, check existing files and follow conventions already in place.
-- Verify changes with the project's test/lint commands before finishing a task.
+- Never run or execute the project. This machine has no environment or hardware to run it — do not attempt installs, builds, or executions.
+- Do not generate tests or test files. This is a data pipeline, and tests would clutter the repository.
 - Ask the user before installing new dependencies or changing the project architecture.
