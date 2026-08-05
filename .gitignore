@@ -1,0 +1,29 @@
+# Secrets
+.env
+*.env
+.env.*
+!.env.example
+
+# Data assets (large audio/data files stay local)
+data/
+*.wav
+*.mp3
+*.flac
+*.opus
+*.m4a
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Generated artifacts
+*.log
+dist/
+build/
+output/
