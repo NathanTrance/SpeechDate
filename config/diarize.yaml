@@ -1,0 +1,6 @@
+# Diarization step: split audio into speaker segments.
+
+step:
+  enabled: true
+  min_speakers: null
+  max_speakers: null

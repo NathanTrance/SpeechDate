@@ -1,0 +1,6 @@
+# ASR step: transcribe speech to text.
+
+step:
+  enabled: true
+  language: null
+  model: ""  # ASR model name or checkpoint

@@ -1,0 +1,6 @@
+# Sidon step: enhance audio quality.
+
+step:
+  enabled: true
+  device: cuda
+  model_path: ""  # relative to ckpt/ (ckpt is gitignored)

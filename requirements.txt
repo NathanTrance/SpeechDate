@@ -1,0 +1,19 @@
+# Core
+PyYAML>=6.0
+requests>=2.31
+
+# Omni captioning server / client (GPU machine)
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+
+# LLM (vLLM) server runs on the GPU machine; install vllm per your environment.
+# Clients here only need `requests` (already listed above).
+
+# TODO: dependencies to add when steps are implemented:
+# torch / torchaudio
+# librosa
+# pyannote.audio
+# faster-whisper
+# transformers (version matching your Qwen3-Omni environment)
+# qwen_omni_utils (not on PyPI; install from https://github.com/QwenLM/Qwen3-Omni)

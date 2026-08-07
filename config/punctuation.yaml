@@ -1,0 +1,17 @@
+# Punctuation step: restore punctuation with the omni model via the hosted server.
+
+step:
+  enabled: true
+  server_url: "http://localhost:8000"
+  # Prompt used when an ASR transcript is available. {transcript} is replaced
+  # with the raw transcript (and alignment info is appended when present).
+  system_prompt: |
+    You are an expert in punctuation restoration for transcribed speech. Given the raw transcript below and the corresponding audio, restore proper punctuation (commas, periods, question marks, exclamation points) and fix any spacing or capitalization issues. Output ONLY the punctuated transcript, with no commentary.
+
+    Transcript:
+    {transcript}
+  # Prompt used when no ASR transcript is available (standalone mode).
+  standalone_system_prompt: |
+    Listen to the audio and write out its exact transcript with proper punctuation (commas, periods, question marks, exclamation points) and correct capitalization. Output ONLY the punctuated transcript, with no commentary.
+  asr_jsonl: ""  # optional path to the ASR step output (jsonl with id/transcript/alignment)
+  max_new_tokens: 2560

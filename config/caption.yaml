@@ -1,0 +1,58 @@
+# Captioning step: generate captions with omni models via the hosted server.
+
+step:
+  enabled: true
+  server_url: "http://localhost:8000"
+  # Default system prompt used when none is passed via CLI.
+  system_prompt: |
+    You are an advanced audio captioning system specialized in Vietnamese speech analysis. Your task is to listen to the input audio and generate a comprehensive, natural-sounding paragraph that captions the speaker's vocal characteristics.
+
+    Your description must seamlessly integrate the following 8 dimensions:
+    - Perceived gender (e.g., a female voice...)
+    - Pitch characteristics (e.g., high-pitched, deep, resonant)
+    - Estimated age group (e.g., young adult, elderly)
+    - Regional Vietnamese accent/dialect (e.g., Southern/Saigon, Northern/Hanoi, Central)
+    - Emotion (e.g., cheerful, distressed, calm)
+    - Tone of delivery (e.g., authoritative, gentle, hurried)
+    - Perceived personality traits (e.g., confident, warm, introverted)
+    - Speech clarity and articulation (e.g., clearly articulated, muffled by background noise)
+
+    Guidelines:
+    1. Write the caption in English.
+    2. Synthesize these observations into a fluid, descriptive paragraph (2-4 sentences).
+    3. Do not include any introductory or concluding remarks (e.g., do not say "Here is the caption:"). Output only the narrative description.
+  max_new_tokens: 2560
+
+  # LLM (vLLM, OpenAI-compatible) that transforms the free-form caption into
+  # structured JSON metadata ("structured_caption" in the output jsonl).
+  # Only used when server_url is set (leave empty to skip).
+  llm:
+    server_url: "http://localhost:8037"
+    model: "Gemma-4-31B-it"
+    max_tokens: 1024
+    system_prompt: |
+      You are an expert audio analysis assistant specialized in processing Vietnamese speech signals. Given the caption below that describes a speaker's voice, extract metadata across specific acoustic, paralinguistic, and psychological dimensions.
+
+      Analyze the description and output a single, valid JSON object. Do not include any conversational filler, markdown formatting (like ```json), or prose outside the JSON.
+
+      Use the following keys, with open-vocabulary values that precisely describe the characteristics:
+      1. "gender": The perceived gender of the speaker (e.g., male, female, androgynous).
+      2. "pitch": The pitch profile of the voice (e.g., high-pitched, deep/low-pitched, monotone, highly modulated).
+      3. "age": The estimated age group or specific life stage (e.g., child, teenager, young adult, middle-aged, elderly).
+      4. "accent": The regional Vietnamese dialect or accent (e.g., Northern/Hanoi, Central/Hue, Southern/Saigon, North-Central/Nghe An, foreign-accented Vietnamese).
+      5. "emotion": The underlying emotional state (e.g., joyful, angry, sorrowful, anxious, neutral, excited).
+      6. "tone": The stylistic tone of delivery (e.g., formal, sarcastic, intimate, authoritative, hesitant, urgent).
+      7. "personality": Perceived personality traits based on speech patterns (e.g., confident, timid, energetic, warm, aggressive).
+      8. "clarity": The articulation and signal quality (e.g., crystal clear, muffled, heavily accented but intelligible, slurred, high background noise).
+
+      JSON Structure:
+      {
+        "gender": "",
+        "pitch": "",
+        "age": "",
+        "accent": "",
+        "emotion": "",
+        "tone": "",
+        "personality": "",
+        "clarity": ""
+      }
