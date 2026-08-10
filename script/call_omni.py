@@ -1,10 +1,11 @@
-"""Call the hosted omni captioning server.
+"""Call the vLLM-served omni model via its OpenAI-compatible API.
 
-Takes an audio file (path) plus an optional system prompt, uploads it to the
-server, and prints (or saves) the generated text.
+The client references local audio paths (no upload), so the vLLM server must
+be started with --allowed-local-media-path covering the audio files (the
+serve_omni wrapper defaults it to "/").
 
 Usage:
-    python -m script.call_omni --url http://localhost:8000 --audio path/to/file.wav
+    python -m script.call_omni --audio path/to/file.wav
     python -m script.call_omni --audio file.wav --system-prompt "Describe this audio." --output out.txt
 """
 
@@ -24,37 +25,50 @@ def caption_audio(
     server_url: str,
     audio_path: str,
     system_prompt: Optional[str] = None,
-    max_new_tokens: int = 2560,
+    max_tokens: int = 2560,
+    temperature: float = 0.1,
+    top_p: float = 0.95,
     timeout: Optional[int] = 600,
+    model: str = "Qwen3-Omni-30B-A3B-Instruct",
 ) -> str:
-    """Send one audio file to the server and return the generated text."""
-    url = server_url.rstrip("/") + "/caption"
-    audio_path = Path(audio_path)
-    if not audio_path.exists():
-        raise FileNotFoundError(f"Audio file not found: {audio_path}")
+    """Caption one audio file via the omni server. Returns the generated text."""
+    url = server_url.rstrip("/") + "/v1/chat/completions"
 
-    with open(audio_path, "rb") as f:
-        files = {"file": (audio_path.name, f, "application/octet-stream")}
-        data = {
-            "system_prompt": system_prompt or "",
-            "max_new_tokens": str(max_new_tokens),
-        }
-        resp = requests.post(url, files=files, data=data, timeout=timeout)
+    if audio_path.startswith(("http://", "https://")):
+        audio_url = audio_path
+    else:
+        path = Path(audio_path)
+        if not path.exists():
+            raise FileNotFoundError(f"Audio file not found: {path}")
+        audio_url = str(path.resolve())
 
+    content = [{"type": "audio_url", "audio_url": {"url": audio_url}}]
+    if system_prompt:
+        content.append({"type": "text", "text": system_prompt})
+
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": content}],
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "top_p": top_p,
+    }
+    resp = requests.post(url, json=payload, timeout=timeout)
     resp.raise_for_status()
-    return resp.json()["text"]
+    return resp.json()["choices"][0]["message"]["content"] or ""
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Call the hosted omni captioning server")
-    parser.add_argument("--url", "-u", default="http://localhost:8000", help="Server base URL")
-    parser.add_argument("--audio", "-a", required=True, help="Path to the audio file")
+    parser = argparse.ArgumentParser(description="Call the vLLM-served omni model")
+    parser.add_argument("--url", "-u", default="http://localhost:8000", help="vLLM base URL")
+    parser.add_argument("--audio", "-a", required=True, help="Path to the audio file (or an http(s) URL)")
     parser.add_argument("--system-prompt", "-s", default=None, help="Optional system prompt")
-    parser.add_argument("--max-new-tokens", type=int, default=2560, help="Max generated tokens")
+    parser.add_argument("--model", "-m", default="Qwen3-Omni-30B-A3B-Instruct", help="Served model name")
+    parser.add_argument("--max-tokens", type=int, default=2560, help="Max generated tokens")
     parser.add_argument("--output", "-o", default=None, help="Optional file to write the text to")
     args = parser.parse_args()
 
-    text = caption_audio(args.url, args.audio, args.system_prompt, args.max_new_tokens)
+    text = caption_audio(args.url, args.audio, args.system_prompt, args.max_tokens, model=args.model)
     logger.info("Generated text (%d chars)", len(text))
 
     if args.output:

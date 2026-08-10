@@ -13,34 +13,49 @@ pip install -r requirements.txt
 ```
 
 Additional requirements on the machines that host the models:
-- Omni server: `transformers` version matching your Qwen3-Omni checkpoint (e.g. `Qwen3-Omni-30B-A3B-Instruct`), `qwen_omni_utils` (not on PyPI, install from https://github.com/QwenLM/Qwen3-Omni), a GPU
+- Omni server: `vllm` with Qwen3-Omni support (the `qwen3_omni` branch, see below), a GPU
 - LLM server: `vllm` (install per your environment), a GPU
 
-## 1. Host the omni model
+Install the Qwen3-Omni-capable vLLM (see `ref/Qwen3-Omni-30B-A3B-Instruct_README.md` -> "vLLM Usage"):
+
+```bash
+git clone -b qwen3_omni https://github.com/wangxiongts/vllm.git
+cd vllm && pip install -e . --no-build-isolation
+pip install git+https://github.com/huggingface/transformers
+pip install qwen-omni-utils -U
+```
+
+## 1. Host the omni model (vLLM)
 
 On the machine with the model and GPU:
 
 ```bash
-python -m script.serve_omni --model-id /path/to/Qwen3-Omni-30B-A3B-Instruct
-# options: --host 0.0.0.0 (default), --port 8000 (default)
+python -m script.serve_omni -m /path/to/Qwen3-Omni-30B-A3B-Instruct
+# background with logs:
+nohup python -m script.serve_omni -m /path/to/Qwen3-Omni-30B-A3B-Instruct > logs/vllm-omni.log 2>&1 &
+# options: --port 8000 (default), --tensor-parallel-size 4 (multi-GPU), --max-num-seqs 64 (default)
 ```
 
-The model loads before the server starts accepting requests.
+The wrapper is preconfigured with the flags from the model README (`--dtype bfloat16 --max-model-len 32768 --allowed-local-media-path /`) and sets `VLLM_USE_V1=0` (engine v1 is not supported yet). The client references local audio paths (no upload), so the audio files must live under the allowed media path (default `/`). Pass `--limit-mm-per-prompt '{"audio": 3}'` to allow more audio per prompt (uses more VRAM).
+
+Endpoints (OpenAI-compatible):
 
 | Endpoint | Description |
 | --- | --- |
-| `GET /health` | `{"status": "ok", "model_loaded": true}` |
-| `POST /caption` | multipart form: `file` (audio), optional `system_prompt`, `max_new_tokens`. Returns `{"text": "..."}` |
+| `GET /v1/models` | lists the served model |
+| `POST /v1/chat/completions` | user content: `[{"type": "audio_url", "audio_url": {"url": "<local path>"}}, {"type": "text", "text": "..."}]` |
+
+A transformers-based fallback server (slow, RTF ~1 on a B200) is available as `script/serve_omni_transformers.py` if vLLM is unavailable.
 
 ## 2. Call the omni server directly
 
 ```bash
 python -m script.call_omni --audio path/to/file.wav
 python -m script.call_omni --audio file.wav --system-prompt "Describe this audio." --output out.txt
-# options: --url http://localhost:8000 (default), --max-new-tokens 2560 (default)
+# options: --url http://localhost:8000 (default), --max-tokens 2560 (default)
 ```
 
-If no `--system-prompt` is given, the server uses a built-in captioning prompt.
+The client sends the local audio path as `audio_url` (or an http(s) URL if given); the model name in the request defaults to `Qwen3-Omni-30B-A3B-Instruct`. If no `--system-prompt` is given, the prompt is whatever the steps/you supply — there is no server-side default prompt anymore.
 
 ## 3. Host the LLM (vLLM)
 

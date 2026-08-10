@@ -2,10 +2,13 @@
 PyYAML>=6.0
 requests>=2.31
 
-# Omni captioning server / client (GPU machine)
-fastapi>=0.110
-uvicorn>=0.29
-python-multipart>=0.0.9
+# Omni captioning server runs on the GPU machine with vLLM. Install a vLLM
+# build with Qwen3-Omni support (qwen3_omni branch while the PR is pending):
+#   git clone -b qwen3_omni https://github.com/wangxiongts/vllm.git
+# See ref/Qwen3-Omni-30B-A3B-Instruct_README.md -> "vLLM Usage".
+# The transformers fallback server (script/serve_omni_transformers.py) needs:
+#   fastapi>=0.110, uvicorn>=0.29, python-multipart>=0.0.9,
+#   transformers (matching Qwen3-Omni), qwen_omni_utils (not on PyPI)
 
 # LLM (vLLM) server runs on the GPU machine; install vllm per your environment.
 # Clients here only need `requests` (already listed above).
@@ -15,5 +18,3 @@ python-multipart>=0.0.9
 # librosa
 # pyannote.audio
 # faster-whisper
-# transformers (version matching your Qwen3-Omni environment)
-# qwen_omni_utils (not on PyPI; install from https://github.com/QwenLM/Qwen3-Omni)
