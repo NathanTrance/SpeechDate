@@ -27,11 +27,13 @@ import os
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Serve Qwen3-Omni with vLLM")
     parser.add_argument("--model", "-m", required=True, help="Model id or local checkpoint path")
+    parser.add_argument("--served-model-name", "-n", default=None, help="Model name exposed by the API (default: model basename, matches the client's default)")
     parser.add_argument("--host", default="0.0.0.0", help="Bind address")
     parser.add_argument("--port", "-p", type=int, default=8000, help="Bind port")
     parser.add_argument("--tensor-parallel-size", "-tp", type=int, default=1, help="Number of GPUs for tensor parallelism")
@@ -51,6 +53,8 @@ def main() -> None:
     args = parser.parse_args()
 
     cmd = ["vllm", "serve", args.model]
+    served_model_name = args.served_model_name or Path(args.model).name
+    cmd += ["--served-model-name", served_model_name]
     cmd += ["--host", args.host, "--port", str(args.port)]
     cmd += ["--dtype", args.dtype]
     cmd += ["--max-model-len", str(args.max_model_len)]

@@ -36,7 +36,7 @@ nohup python -m script.serve_omni -m /path/to/Qwen3-Omni-30B-A3B-Instruct > logs
 # options: --port 8000 (default), --tensor-parallel-size 4 (multi-GPU), --max-num-seqs 64 (default)
 ```
 
-The wrapper is preconfigured with the flags from the model README (`--dtype bfloat16 --max-model-len 32768 --allowed-local-media-path /`) and sets `VLLM_USE_V1=0` (engine v1 is not supported yet). The client references local audio paths (no upload), so the audio files must live under the allowed media path (default `/`). Pass `--limit-mm-per-prompt '{"audio": 3}'` to allow more audio per prompt (uses more VRAM).
+The wrapper is preconfigured with the flags from the model README (`--dtype bfloat16 --max-model-len 32768 --allowed-local-media-path /`) and sets `VLLM_USE_V1=0` (engine v1 is not supported yet). It also sets `--served-model-name` to the model's basename (e.g. `Qwen3-Omni-30B-A3B-Instruct`) so it matches the clients' default `model` field. The client references local audio paths (no upload), so the audio files must live under the allowed media path (default `/`). Pass `--limit-mm-per-prompt '{"audio": 3}'` to allow more audio per prompt (uses more VRAM).
 
 Endpoints (OpenAI-compatible):
 
