@@ -34,13 +34,13 @@ def caption_audio(
     """Caption one audio file via the omni server. Returns the generated text."""
     url = server_url.rstrip("/") + "/v1/chat/completions"
 
-    if audio_path.startswith(("http://", "https://")):
+    if audio_path.startswith(("http://", "https://", "data:", "file:")):
         audio_url = audio_path
     else:
         path = Path(audio_path)
         if not path.exists():
             raise FileNotFoundError(f"Audio file not found: {path}")
-        audio_url = str(path.resolve())
+        audio_url = path.resolve().as_uri()  # file:///... (vLLM requires a URL scheme)
 
     content = [{"type": "audio_url", "audio_url": {"url": audio_url}}]
     if system_prompt:
